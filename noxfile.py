@@ -67,38 +67,24 @@ def clone(session: Session) -> None:
 @nox.session(python=PYTHON, tags=["build"])
 def docs(session: Session) -> None:
     """Build polars's docs."""
-    # Remove the NotImplemented error once the correct doc build steps
-    # have been added
-    raise NotImplementedError(
-        "Replace starter code below with correct docs build steps."
-    )
-    # Instructions are usually found in a file named CONTRIBUTING.md,
-    # or by copying the steps in the workflows found in
-    # .github/workflows/
-    # Check if it works by running nox --tags=build in your terminal
-    # This is an example doc step process that works with most libraries
-    # It may or may not work with the library you are targeting
-    with session.chdir(LIBRARY_REPOSITORY):
-        session.install(".")
+    with session.chdir(f"{LIBRARY_REPOSITORY}/py-polars"):
+        session.install("--requirement=requirements-dev.txt")
 
-    with session.chdir(pathlib.Path(LIBRARY_REPOSITORY) / "docs"):
-        session.install("--requirement=requirements.txt")
-        session.run("make", "docs", external=True)
+        with session.chdir("docs"):
+            session.install("--requirement=requirements-docs.txt")
+            session.run("make", "html", external=True, env={"SPHINXOPTS": "-W"})
 
 
 @nox.session(python=False, tags=["build"])
 def icon(session: Session) -> None:
     """Create dash icon."""
+    session.run("gh", "repo", "clone", "pola-rs/polars-static")
     for size, file_name in (("16x16", "icon.png"), ("32x32", "icon@2x.png")):
         # Using convert instead of magick since only the former is
         # available by default right now in ubuntu-latest
-        # Remove the NotImplementedError once the correct icon path has
-        # been added
-        raise NotImplementedError("Specify the correct path to the icon")
         session.run(
             "convert",
-            # Specify the correct path in the line below
-            "polars/path/to/icon.png",
+            "polars-static/icons/favicon-32x32.png",
             "-resize",
             size,
             "-background",
@@ -123,21 +109,12 @@ def _get_docset_path() -> Path:
 def dash(session: Session) -> None:
     """Create dash docset."""
     session.install("doc2dash", CONSTRAINTS_ARG)
-    # Remove the NotImplementedError once the correct path to the build
-    # documentation has been added
-    raise NotImplementedError("Specity the correct path to the build documentation")
     session.run(
         "doc2dash",
         "--index-page=index.html",
         "--icon=icon.png",
         "--online-redirect-url=https://pola-rs.github.io/polars/py-polars/html/reference/",
-        # Replace the path below with the correct path to the
-        # documentation
-        # For python libraries, most of the time the below will work as
-        # is
-        # You may run `nox --sessions clone docs` to observe where the
-        # build docs end up
-        f"{LIBRARY_REPOSITORY}/doc/_build/html",
+        f"{LIBRARY_REPOSITORY}/py-polars/docs/build/html",
         *session.posargs,
     )
     # As of 3.0.0, doc2dash does not support 2x icons

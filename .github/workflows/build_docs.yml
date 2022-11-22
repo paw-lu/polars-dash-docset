@@ -44,6 +44,13 @@ jobs:
         with:
           python-versions: "3.10"
 
+      - name: Setup Rust
+        id: setup-rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          components: miri
+
       - name: Build docs
         id: build-docs
         env:
