@@ -1,0 +1,97 @@
+name: Build docs
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      manual_release:
+        description: "Manually trigger doc build and release."
+        required: false
+        default: false
+      debug_enabled:
+        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
+        required: false
+        default: false
+
+jobs:
+  release:
+    name: Build docs
+    runs-on: ubuntu-latest
+
+    env:
+      FORCE_COLOR: "1"
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Upgrade pip
+        run: |
+          python -m pip install --constraint=.github/workflows/constraints.txt pip
+          python -m pip --version
+
+      - name: Setup Nox
+        id: setup-nox
+        uses: wntrblm/nox@2022.8.7
+        with:
+          python-versions: "3.10"
+
+      - name: Build docs
+        id: build-docs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          nox --tags build
+
+      - name: Check if there is a parent commit
+        id: check-parent-commit
+        if: ${{ github.event_name == 'push'
+          && github.ref_name == 'main' }}
+        run: |
+          echo "::set-output name=sha::$(git rev-parse --verify --quiet HEAD^)"
+
+      - name: Detect and tag new version
+        id: check-version
+        if: steps.check-parent-commit.outputs.sha
+        uses: salsify/action-detect-and-tag-new-version@v2.0.1
+        with:
+          version-command: |
+            nox --session version | tail -n 1
+
+      - name: Setup git
+        id: setup-git
+        if: ${{ (steps.check-version.outputs.tag
+          && github.event_name == 'push'
+          && github.ref_name == 'main'
+          )||
+          (
+          github.event_name == 'workflow_dispatch'
+          && github.event.inputs.manual_release
+          ) }}
+        run: |
+          git config --global user.name "cookiecutter-dash-docset"
+          git config --global user.email "cookiecutter.dash.docset@users.noreply.github.com"
+
+      - name: Contribute docs
+        id: contribute-docs
+        if: ${{ steps.setup-git.outcome == 'success' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          nox --tags contribute
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+        if: ${{ github.event_name == 'workflow_dispatch'
+          && github.event.inputs.debug_enabled
+          && failure() }}

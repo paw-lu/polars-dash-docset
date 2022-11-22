@@ -1,0 +1,14 @@
+{
+  "_output_dir": "/Users/pawlu/Documents/personal",
+  "_template": "https://github.com/paw-lu/cookiecutter-dash-docset",
+  "documentation_url": "https://pola-rs.github.io/polars/py-polars/html/reference/",
+  "github_username": "paw-lu",
+  "installable_name": "polars",
+  "library_name": "polars",
+  "library_owner": "pola-rs",
+  "library_repository_name": "polars",
+  "library_version": "0.14.29",
+  "project_name": "polars-dash-docset",
+  "python_version": "3.10",
+  "your_name": "Paulo S. Costa"
+}
