@@ -111,14 +111,11 @@ def dash(session: Session) -> None:
         "doc2dash",
         "--index-page=index.html",
         "--icon=icon.png",
+        "--icon-2x=icon@2x.png",
         "--online-redirect-url=https://pola-rs.github.io/polars/py-polars/html/reference/",
         f"{LIBRARY_REPOSITORY}/py-polars/docs/build/html",
         *session.posargs,
     )
-    # As of 3.0.0, doc2dash does not support 2x icons
-    # See https://github.com/hynek/doc2dash/issues/130
-    docset_path = _get_docset_path()
-    shutil.copy("icon@2x.png", os.fsdecode(docset_path))
 
 
 @functools.lru_cache
