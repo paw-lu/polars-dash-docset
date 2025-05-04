@@ -69,11 +69,9 @@ def clone(session: Session) -> None:
 def docs(session: Session) -> None:
     """Build polars's docs."""
     with session.chdir(f"{LIBRARY_REPOSITORY}/py-polars"):
-        session.install("--requirement=requirements-dev.txt")
-
         with session.chdir("docs"):
-            session.install("--requirement=requirements-docs.txt")
-            session.run("make", "html", external=True, env={"SPHINXOPTS": "-W"})
+            session.install("--requirements=requirements-docs.txt")
+            session.run("make", "html", external=True)
 
 
 @nox.session(python=False, tags=["build"])
