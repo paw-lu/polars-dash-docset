@@ -28,7 +28,7 @@ GITHUB_REPO = "polars-dash-docset"
 # This is necessary to make nox run on specified python
 # Follow https://github.com/wntrblm/nox/issues/623 to see if it
 # eventually changes
-PYTHON = "3.10"
+PYTHON = "3.13"
 
 
 @nox.session(python=False, tags=["build"])
@@ -350,7 +350,7 @@ def fill_forms(session: Session) -> None:
         - [GNU Tar](https://www.gnu.org/software/tar/)
         - [ImageMagick](https://imagemagick.org/index.php)
         - [Nox](https://nox.thea.codes/en/stable/)
-        - [Python 3.10](https://www.python.org/)
+        - [Python 3.13](https://www.python.org/)
 
         ### Build directions
 
