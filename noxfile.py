@@ -1,10 +1,10 @@
 """Nox sessions."""
+
 import functools
 import json
 import os
 import pathlib
 import shutil
-import tempfile
 import textwrap
 from pathlib import Path
 from urllib import parse
@@ -12,8 +12,9 @@ from urllib import parse
 import nox
 from nox.sessions import Session
 
-nox.needs_version = ">= 2021.6.6"
+nox.needs_version = ">= 2025.05.01"
 nox.options.stop_on_first_error = True
+nox.options.default_venv_backend = "uv"
 
 CONSTRAINTS_ARG = "--constraint=.github/workflows/constraints.txt"
 COOKIECUTTER_PROJECT = (
@@ -28,7 +29,7 @@ GITHUB_REPO = "polars-dash-docset"
 # This is necessary to make nox run on specified python
 # Follow https://github.com/wntrblm/nox/issues/623 to see if it
 # eventually changes
-PYTHON = "3.10"
+PYTHON = "3.13"
 
 
 @nox.session(python=False, tags=["build"])
@@ -68,11 +69,9 @@ def clone(session: Session) -> None:
 def docs(session: Session) -> None:
     """Build polars's docs."""
     with session.chdir(f"{LIBRARY_REPOSITORY}/py-polars"):
-        session.install("--requirement=requirements-dev.txt")
-
         with session.chdir("docs"):
-            session.install("--requirement=requirements-docs.txt")
-            session.run("make", "html", external=True, env={"SPHINXOPTS": "-W"})
+            session.install("--requirements=requirements-docs.txt")
+            session.run("make", "html", external=True)
 
 
 @nox.session(python=False, tags=["build"])
@@ -80,9 +79,8 @@ def icon(session: Session) -> None:
     """Create dash icon."""
     session.run("gh", "repo", "clone", "pola-rs/polars-static")
     for size, file_name in (("16x16", "icon.png"), ("32x32", "icon@2x.png")):
-        # Using convert instead of magick since only the former is
-        # available by default right now in ubuntu-latest
         session.run(
+            "magick",
             "convert",
             "polars-static/icons/favicon-32x32.png",
             "-resize",
@@ -113,41 +111,26 @@ def dash(session: Session) -> None:
         "doc2dash",
         "--index-page=index.html",
         "--icon=icon.png",
+        "--icon-2x=icon@2x.png",
         "--online-redirect-url=https://pola-rs.github.io/polars/py-polars/html/reference/",
         f"{LIBRARY_REPOSITORY}/py-polars/docs/build/html",
         *session.posargs,
     )
-    # As of 3.0.0, doc2dash does not support 2x icons
-    # See https://github.com/hynek/doc2dash/issues/130
-    docset_path = _get_docset_path()
-    shutil.copy("icon@2x.png", os.fsdecode(docset_path))
 
 
 @functools.lru_cache
 def _get_library_version(session: Session) -> str:
     """Get the version for the library."""
-    with tempfile.NamedTemporaryFile() as dependency_report_file:
-        session.install(
-            "--dry-run",
-            "--no-deps",
-            "--ignore-installed",
-            "--report",
-            dependency_report_file.name,
-            "--requirement",
-            "doc-requirements.txt",
+    doc_requirements = pathlib.Path("doc-requirements.txt").read_text().strip()
+    number_of_lines = doc_requirements.count("\n") + 1
+
+    if number_of_lines > 1:
+        error_message = (
+            f"Expected only one line in doc-requirements.txt Got {number_of_lines=}."
         )
-        dependency_report = json.load(dependency_report_file.file)
+        raise ValueError(error_message)
 
-    install_report = dependency_report["install"]
-
-    if 1 < len(install_report):
-        raise ValueError(
-            "Multiple dependencies detected in requirements file. Expected one."
-        )
-
-    library_install_report, *_ = install_report
-    library_version: str = library_install_report["metadata"]["version"]
-
+    *_, library_version = doc_requirements.partition("==")
     return library_version
 
 
@@ -169,8 +152,7 @@ def _get_trunk_branch_name(
     if isinstance(default_branch, str):
         return default_branch.rstrip()
 
-    else:
-        raise ValueError("No default branch detected.")
+    raise ValueError("No default branch detected.")
 
 
 @functools.lru_cache
@@ -256,11 +238,9 @@ def _get_dash_docset_path() -> Path:
             library_docset_path.is_dir()
             and lowered_library_name == library_docset_path.name.lower()
         ):
-
             return library_docset_path
 
     else:
-
         return docset_directory / LIBRARY_NAME
 
 
@@ -350,7 +330,7 @@ def fill_forms(session: Session) -> None:
         - [GNU Tar](https://www.gnu.org/software/tar/)
         - [ImageMagick](https://imagemagick.org/index.php)
         - [Nox](https://nox.thea.codes/en/stable/)
-        - [Python 3.10](https://www.python.org/)
+        - [Python 3.13](https://www.python.org/)
 
         ### Build directions
 
