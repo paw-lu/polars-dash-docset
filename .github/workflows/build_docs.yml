@@ -56,6 +56,10 @@ jobs:
           toolchain: nightly
           components: miri
 
+      - name: Setup imagemagick
+        id: setup-imagemagick
+        uses: mfinelli/setup-imagemagick@v6
+
       - name: Build docs
         id: build-docs
         env:

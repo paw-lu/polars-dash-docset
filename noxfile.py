@@ -79,9 +79,8 @@ def icon(session: Session) -> None:
     """Create dash icon."""
     session.run("gh", "repo", "clone", "pola-rs/polars-static")
     for size, file_name in (("16x16", "icon.png"), ("32x32", "icon@2x.png")):
-        # Using convert instead of magick since only the former is
-        # available by default right now in ubuntu-latest
         session.run(
+            "magick",
             "convert",
             "polars-static/icons/favicon-32x32.png",
             "-resize",
