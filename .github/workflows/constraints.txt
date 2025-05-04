@@ -1,4 +1,4 @@
-doc2dash==3.0.0
-mypy==1.4.1
-pip==23.2.1
-pre-commit==3.3.3
+doc2dash==3.1.0
+mypy==1.15.0
+pip==25.1.1
+pre-commit==4.2.0
