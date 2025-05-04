@@ -12,8 +12,9 @@ from urllib import parse
 import nox
 from nox.sessions import Session
 
-nox.needs_version = ">= 2021.6.6"
+nox.needs_version = ">= 2025.05.01"
 nox.options.stop_on_first_error = True
+nox.options.default_venv_backend = "uv"
 
 CONSTRAINTS_ARG = "--constraint=.github/workflows/constraints.txt"
 COOKIECUTTER_PROJECT = (
