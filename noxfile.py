@@ -1,10 +1,10 @@
 """Nox sessions."""
+
 import functools
 import json
 import os
 import pathlib
 import shutil
-import tempfile
 import textwrap
 from pathlib import Path
 from urllib import parse
@@ -127,28 +127,16 @@ def dash(session: Session) -> None:
 @functools.lru_cache
 def _get_library_version(session: Session) -> str:
     """Get the version for the library."""
-    with tempfile.NamedTemporaryFile() as dependency_report_file:
-        session.install(
-            "--dry-run",
-            "--no-deps",
-            "--ignore-installed",
-            "--report",
-            dependency_report_file.name,
-            "--requirement",
-            "doc-requirements.txt",
+    doc_requirements = pathlib.Path("doc-requirements.txt").read_text().strip()
+    number_of_lines = doc_requirements.count("\n") + 1
+
+    if number_of_lines > 1:
+        error_message = (
+            f"Expected only one line in doc-requirements.txt Got {number_of_lines=}."
         )
-        dependency_report = json.load(dependency_report_file.file)
+        raise ValueError(error_message)
 
-    install_report = dependency_report["install"]
-
-    if 1 < len(install_report):
-        raise ValueError(
-            "Multiple dependencies detected in requirements file. Expected one."
-        )
-
-    library_install_report, *_ = install_report
-    library_version: str = library_install_report["metadata"]["version"]
-
+    *_, library_version = doc_requirements.partition("==")
     return library_version
 
 
