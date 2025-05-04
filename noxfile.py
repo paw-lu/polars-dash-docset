@@ -156,8 +156,7 @@ def _get_trunk_branch_name(
     if isinstance(default_branch, str):
         return default_branch.rstrip()
 
-    else:
-        raise ValueError("No default branch detected.")
+    raise ValueError("No default branch detected.")
 
 
 @functools.lru_cache
@@ -243,11 +242,9 @@ def _get_dash_docset_path() -> Path:
             library_docset_path.is_dir()
             and lowered_library_name == library_docset_path.name.lower()
         ):
-
             return library_docset_path
 
     else:
-
         return docset_directory / LIBRARY_NAME
 
 
