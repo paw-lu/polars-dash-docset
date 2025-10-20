@@ -40,7 +40,7 @@ jobs:
           version: "0.6.12"
 
       - name: Setup Nox
-        uses: wntrblm/nox@2025.05.01
+        uses: wntrblm/nox@2025.10.16
         with:
           python-versions: "3.13"
 
